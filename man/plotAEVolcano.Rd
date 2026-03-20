@@ -4,7 +4,7 @@
 \alias{plotAEVolcano}
 \title{Plot AE volcano plot for one sample}
 \usage{
-plotAEVolcano(x, sampleID, topN = 10)
+plotAEVolcano(x, sampleID, topN = 10, groupBy = NULL)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
@@ -12,6 +12,8 @@ plotAEVolcano(x, sampleID, topN = 10)
 \item{sampleID}{Character scalar specifying the target sample.}
 
 \item{topN}{Integer; number of top genes to label.}
+
+\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
 }
 \value{
 A ggplot object.

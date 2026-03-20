@@ -4,10 +4,12 @@
 \alias{plotAESampleSummary}
 \title{Plot AE outlier counts per sample}
 \usage{
-plotAESampleSummary(x)
+plotAESampleSummary(x, groupBy = NULL)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
+
+\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
 }
 \value{
 A ggplot object.

@@ -3,10 +3,11 @@
 #' @param x An `AEResult` object.
 #' @param sampleID Character scalar specifying the target sample.
 #' @param topN Integer; number of top genes to label.
+#' @param groupBy Optional character scalar specifying a column name in stored `colData`.
 #'
 #' @return A ggplot object.
 #' @export
-plotAEVolcano <- function(x, sampleID, topN = 10) {
+plotAEVolcano <- function(x, sampleID, topN = 10, groupBy = NULL) {
   if (!inherits(x, "AEResult")) {
     stop("`x` must be an AEResult object.")
   }
@@ -19,6 +20,7 @@ plotAEVolcano <- function(x, sampleID, topN = 10) {
 
   df$neglog10_padj <- -log10(df$padj)
   df$neglog10_padj[!is.finite(df$neglog10_padj)] <- NA_real_
+  df <- .attach_group_info(df, x, groupBy = groupBy)
 
   df$label <- ""
   ord <- order(df$padj, na.last = NA)
@@ -34,14 +36,27 @@ plotAEVolcano <- function(x, sampleID, topN = 10) {
     }
   }
 
-  ggplot2::ggplot(
-    df,
-    ggplot2::aes(x = log2fc, y = neglog10_padj)
-  ) +
-    ggplot2::geom_point(
-      ggplot2::aes(color = is_outlier),
-      alpha = 0.7
+  if (!is.null(groupBy) && "group" %in% colnames(df) && any(!is.na(df$group))) {
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = log2fc, y = neglog10_padj)
     ) +
+      ggplot2::geom_point(
+        ggplot2::aes(color = group, shape = is_outlier),
+        alpha = 0.7
+      )
+  } else {
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(x = log2fc, y = neglog10_padj)
+    ) +
+      ggplot2::geom_point(
+        ggplot2::aes(color = is_outlier),
+        alpha = 0.7
+      )
+  }
+
+  p +
     ggplot2::geom_text(
       data = df[df$label != "", , drop = FALSE],
       ggplot2::aes(label = label),

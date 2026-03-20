@@ -65,7 +65,6 @@ runAE <- function(
   }
 
   keep <- rowSums(counts > 0, na.rm = TRUE) > 0
-
   if (isTRUE(filterByFPKM)) {
     keep <- keep & (rowSums(fpkm >= minFPKM, na.rm = TRUE) > 0)
   }
@@ -111,6 +110,7 @@ runAE <- function(
   res <- OUTRIDER::results(ods, all = TRUE)
   res <- as.data.frame(res, stringsAsFactors = FALSE)
 
+  # 标准化列名
   res$sample_id <- res$sampleID
   res$gene_id <- res$geneID
   res$pvalue <- res$pValue
@@ -118,9 +118,11 @@ runAE <- function(
   res$zscore <- res$zScore
   res$log2fc <- res$l2fc
   res$raw_count <- res$rawcounts
+  res$norm_count <- res$normcounts
   res$expected_count <- res$normcounts
 
-  if (!is.null(rowData) && nrow(res) > 0) {
+  # 加回 gene annotation
+  if (!is.null(rowData_f) && nrow(res) > 0) {
     rd <- rowData_f
     rd$gene_id <- rownames(rd)
     idx <- match(res$gene_id, rd$gene_id)
@@ -128,8 +130,12 @@ runAE <- function(
     if ("gene_name" %in% colnames(rd)) {
       res$gene_name <- rd$gene_name[idx]
     }
+    if ("fc_chr" %in% colnames(rd)) {
+      res$chromosome <- rd$fc_chr[idx]
+    }
   }
 
+  # 定义 outlier
   res$is_outlier <- !is.na(res$padj) & res$padj < padjCutoff
   if (!is.null(zCutoff)) {
     res$is_outlier <- res$is_outlier &
@@ -137,11 +143,14 @@ runAE <- function(
       abs(res$zscore) >= zCutoff
   }
 
+  # 保留标准列
   standard_cols <- c(
     "sample_id",
     "gene_id",
     "gene_name",
+    "chromosome",
     "raw_count",
+    "norm_count",
     "expected_count",
     "zscore",
     "log2fc",
@@ -162,7 +171,8 @@ runAE <- function(
       n_genes_input = nrow(counts),
       n_genes_after_prefilter = nrow(counts_f),
       n_samples = ncol(counts),
-      used_fpkm_filter = filterByFPKM
+      used_fpkm_filter = filterByFPKM,
+      colData = colData_f
     ),
     parameters = list(
       minFPKM = minFPKM,

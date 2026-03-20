@@ -4,7 +4,7 @@
 \alias{plotAEZScore}
 \title{Plot AE z-score ranking for one sample}
 \usage{
-plotAEZScore(x, sampleID, topN = 10)
+plotAEZScore(x, sampleID, topN = 10, groupBy = NULL)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
@@ -12,6 +12,8 @@ plotAEZScore(x, sampleID, topN = 10)
 \item{sampleID}{Character scalar specifying the target sample.}
 
 \item{topN}{Integer; number of top genes to label.}
+
+\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
 }
 \value{
 A ggplot object.
