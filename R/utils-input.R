@@ -18,17 +18,8 @@
   if (anyDuplicated(colnames(x))) {
     stop("Duplicate sample IDs found in column names of `counts`.")
   }
-  x
-}
 
-.check_sample_id <- function(sampleID, sampleNames) {
-  if (!is.character(sampleID) || length(sampleID) != 1L) {
-    stop("`sampleID` must be a character scalar.")
-  }
-  if (!sampleID %in% sampleNames) {
-    stop("`sampleID` not found in column names of input matrix.")
-  }
-  invisible(TRUE)
+  x
 }
 
 .coerce_coldata <- function(colData, sample_ids) {
@@ -82,37 +73,6 @@
   }
 
   rowData[gene_ids, , drop = FALSE]
-}
-
-.coerce_fpkm_matrix <- function(fpkm, gene_ids, sample_ids) {
-  if (is.null(fpkm)) {
-    return(NULL)
-  }
-  if (is.data.frame(fpkm)) {
-    fpkm <- as.matrix(fpkm)
-  }
-  if (!is.matrix(fpkm)) {
-    stop("`fpkm` must be a matrix or data.frame.")
-  }
-
-  storage.mode(fpkm) <- "numeric"
-
-  if (is.null(rownames(fpkm)) || is.null(colnames(fpkm))) {
-    stop("`fpkm` must have row names (genes) and column names (samples).")
-  }
-
-  miss_g <- setdiff(gene_ids, rownames(fpkm))
-  miss_s <- setdiff(sample_ids, colnames(fpkm))
-
-  if (length(miss_g) > 0) {
-    stop("Missing genes in `fpkm`: first few = ",
-         paste(utils::head(miss_g, 10), collapse = ", "))
-  }
-  if (length(miss_s) > 0) {
-    stop("Missing samples in `fpkm`: ", paste(miss_s, collapse = ", "))
-  }
-
-  fpkm[gene_ids, sample_ids, drop = FALSE]
 }
 
 .check_package_OUTRIDER <- function() {

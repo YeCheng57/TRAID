@@ -5,11 +5,10 @@
 \title{Run aberrant expression detection using OUTRIDER}
 \usage{
 runAE(
-  counts,
-  sampleID,
+  x,
+  geneLength = NULL,
   colData = NULL,
   rowData = NULL,
-  fpkm = NULL,
   filterByFPKM = TRUE,
   minFPKM = 1,
   padjCutoff = 0.05,
@@ -20,25 +19,24 @@ runAE(
 )
 }
 \arguments{
-\item{counts}{A numeric matrix or data.frame of raw gene counts with genes in
-rows and samples in columns.}
+\item{x}{A featureCounts table (data.frame with columns:
+Geneid, Chr, Start, End, Strand, Length, followed by sample columns) or
+a raw count matrix/data.frame.}
 
-\item{sampleID}{Character scalar specifying the target sample.}
+\item{geneLength}{Optional named numeric vector of gene lengths in bp.
+Required when \code{x} is not a featureCounts table and \code{filterByFPKM = TRUE}.}
 
 \item{colData}{Optional sample metadata as a data.frame.}
 
 \item{rowData}{Optional gene annotation as a data.frame.}
 
-\item{fpkm}{Optional numeric matrix/data.frame of FPKM values with the same
-dimensions as \code{counts}.}
-
 \item{filterByFPKM}{Logical; whether to filter genes using FPKM.}
 
 \item{minFPKM}{Numeric cutoff for FPKM filtering.}
 
-\item{padjCutoff}{Adjusted p-value cutoff.}
+\item{padjCutoff}{Adjusted p-value cutoff for defining outliers.}
 
-\item{zCutoff}{Optional absolute z-score cutoff.}
+\item{zCutoff}{Optional absolute z-score cutoff for defining outliers.}
 
 \item{implementation}{Currently only "OUTRIDER".}
 
@@ -50,6 +48,6 @@ dimensions as \code{counts}.}
 An object of class \code{AEResult}.
 }
 \description{
-Perform cohort-based aberrant expression detection for a target sample from a
-gene-by-sample raw count matrix.
+Perform cohort-based aberrant expression detection from either a featureCounts
+table or a gene-by-sample raw count matrix.
 }

@@ -1,19 +1,19 @@
 #' Run aberrant expression detection using OUTRIDER
 #'
-#' Perform cohort-based aberrant expression detection for a target sample from
-#' either a featureCounts table or a gene-by-sample raw count matrix.
+#' Perform cohort-based aberrant expression detection from either a featureCounts
+#' table or a gene-by-sample raw count matrix.
 #'
-#' @param x A featureCounts table (data.frame with first 6 columns:
-#' Geneid, Chr, Start, End, Strand, Length) or a raw count matrix/data.frame.
-#' @param sampleID Character scalar specifying the target sample.
+#' @param x A featureCounts table (data.frame with columns:
+#' Geneid, Chr, Start, End, Strand, Length, followed by sample columns) or
+#' a raw count matrix/data.frame.
 #' @param geneLength Optional named numeric vector of gene lengths in bp.
 #' Required when `x` is not a featureCounts table and `filterByFPKM = TRUE`.
 #' @param colData Optional sample metadata as a data.frame.
 #' @param rowData Optional gene annotation as a data.frame.
 #' @param filterByFPKM Logical; whether to filter genes using FPKM.
 #' @param minFPKM Numeric cutoff for FPKM filtering.
-#' @param padjCutoff Adjusted p-value cutoff.
-#' @param zCutoff Optional absolute z-score cutoff.
+#' @param padjCutoff Adjusted p-value cutoff for defining outliers.
+#' @param zCutoff Optional absolute z-score cutoff for defining outliers.
 #' @param implementation Currently only "OUTRIDER".
 #' @param returnModel Logical; whether to return the fitted OUTRIDER object.
 #' @param ... Additional arguments passed to `OUTRIDER::OUTRIDER()`.
@@ -22,7 +22,6 @@
 #' @export
 runAE <- function(
     x,
-    sampleID,
     geneLength = NULL,
     colData = NULL,
     rowData = NULL,
@@ -50,7 +49,6 @@ runAE <- function(
     counts <- .coerce_counts_matrix(x)
   }
 
-  .check_sample_id(sampleID, colnames(counts))
   colData <- .coerce_coldata(colData, colnames(counts))
   rowData <- .coerce_rowdata(rowData, rownames(counts))
 
@@ -110,68 +108,56 @@ runAE <- function(
   )
 
   ods <- OUTRIDER::OUTRIDER(ods, ...)
-  res <- OUTRIDER::results(ods)
+  res <- OUTRIDER::results(ods, all = TRUE)
   res <- as.data.frame(res, stringsAsFactors = FALSE)
 
-  if ("padjust" %in% colnames(res) && !"padj" %in% colnames(res)) {
-    res$padj <- res$padjust
-  }
-  if ("pValue" %in% colnames(res) && !"pvalue" %in% colnames(res)) {
-    res$pvalue <- res$pValue
-  }
-  if ("zScore" %in% colnames(res) && !"zscore" %in% colnames(res)) {
-    res$zscore <- res$zScore
-  }
-  if ("sampleID" %in% colnames(res) && !"sample_id" %in% colnames(res)) {
-    res$sample_id <- res$sampleID
-  }
-  if ("geneID" %in% colnames(res) && !"gene_id" %in% colnames(res)) {
-    res$gene_id <- res$geneID
-  }
-  if ("rawcounts" %in% colnames(res) && !"raw_count" %in% colnames(res)) {
-    res$raw_count <- res$rawcounts
-  }
-  if ("normcounts" %in% colnames(res) && !"expected_count" %in% colnames(res)) {
-    res$expected_count <- res$normcounts
-  }
-  if ("l2fc" %in% colnames(res) && !"log2fc" %in% colnames(res)) {
-    res$log2fc <- res$l2fc
-  }
+  res$sample_id <- res$sampleID
+  res$gene_id <- res$geneID
+  res$pvalue <- res$pValue
+  res$padj <- res$padjust
+  res$zscore <- res$zScore
+  res$log2fc <- res$l2fc
+  res$raw_count <- res$rawcounts
+  res$expected_count <- res$normcounts
 
-  sample_res <- res[res$sample_id == sampleID, , drop = FALSE]
-
-  if (!is.null(rowData) && nrow(sample_res) > 0) {
+  if (!is.null(rowData) && nrow(res) > 0) {
     rd <- rowData_f
     rd$gene_id <- rownames(rd)
-    idx <- match(sample_res$gene_id, rd$gene_id)
-    extra_cols <- setdiff(colnames(rd), colnames(sample_res))
-    for (nm in extra_cols) {
-      sample_res[[nm]] <- rd[[nm]][idx]
+    idx <- match(res$gene_id, rd$gene_id)
+
+    if ("gene_name" %in% colnames(rd)) {
+      res$gene_name <- rd$gene_name[idx]
     }
   }
 
-  sample_res$is_outlier <- !is.na(sample_res$padj) & sample_res$padj < padjCutoff
+  res$is_outlier <- !is.na(res$padj) & res$padj < padjCutoff
   if (!is.null(zCutoff)) {
-    sample_res$is_outlier <- sample_res$is_outlier &
-      !is.na(sample_res$zscore) &
-      abs(sample_res$zscore) >= zCutoff
+    res$is_outlier <- res$is_outlier &
+      !is.na(res$zscore) &
+      abs(res$zscore) >= zCutoff
   }
 
-  preferred <- c(
-    "sample_id", "gene_id", "gene_name",
-    "raw_count", "expected_count",
-    "zscore", "log2fc", "pvalue", "padj", "is_outlier"
+  standard_cols <- c(
+    "sample_id",
+    "gene_id",
+    "gene_name",
+    "raw_count",
+    "expected_count",
+    "zscore",
+    "log2fc",
+    "pvalue",
+    "padj",
+    "is_outlier"
   )
-  keep_cols <- intersect(preferred, colnames(sample_res))
-  other_cols <- setdiff(colnames(sample_res), keep_cols)
-  sample_res <- sample_res[, c(keep_cols, other_cols), drop = FALSE]
+
+  keep_cols <- intersect(standard_cols, colnames(res))
+  res <- res[, keep_cols, drop = FALSE]
 
   model_out <- if (isTRUE(returnModel)) list(ods = ods) else NULL
 
   new_AEResult(
-    result = sample_res,
+    result = res,
     metadata = list(
-      sampleID = sampleID,
       implementation = implementation,
       n_genes_input = nrow(counts),
       n_genes_after_prefilter = nrow(counts_f),

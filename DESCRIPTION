@@ -13,7 +13,8 @@ RoxygenNote: 7.3.3
 Imports:
     OUTRIDER,
     stats,
-    utils
+    utils,
+    ggplot2
 Suggests: 
     testthat (>= 3.0.0),
     knitr,

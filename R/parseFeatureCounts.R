@@ -25,16 +25,16 @@ parseFeatureCounts <- function(x) {
   storage.mode(counts) <- "numeric"
   rownames(counts) <- x$Geneid
 
-  geneLength <- x$Length
+  geneLength <- as.numeric(x$Length)
   names(geneLength) <- x$Geneid
 
   rowData <- data.frame(
     gene_id = x$Geneid,
-    chr = x$Chr,
-    start = x$Start,
-    end = x$End,
-    strand = x$Strand,
-    length = x$Length,
+    fc_chr = x$Chr,
+    fc_start = x$Start,
+    fc_end = x$End,
+    fc_strand = x$Strand,
+    fc_length = x$Length,
     row.names = x$Geneid,
     stringsAsFactors = FALSE
   )

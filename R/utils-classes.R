@@ -8,11 +8,13 @@ new_AEResult <- function(result, metadata, parameters, model = NULL) {
   class(out) <- c("AEResult", "list")
   out
 }
+
 #' @export
 print.AEResult <- function(x, ...) {
   cat("<AEResult>\n")
-  cat(" Sample:", x$metadata$sampleID, "\n")
-  cat(" Genes :", nrow(x$result), "\n")
+  cat(" Samples :", length(unique(x$result$sample_id)), "\n")
+  cat(" Genes   :", length(unique(x$result$gene_id)), "\n")
+  cat(" Rows    :", nrow(x$result), "\n")
   if ("is_outlier" %in% colnames(x$result)) {
     cat(" Outliers:", sum(x$result$is_outlier, na.rm = TRUE), "\n")
   }
