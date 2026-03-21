@@ -4,17 +4,20 @@
   group_col <- if (site == "donor") "donor_id" else "acceptor_id"
 
   total_df <- stats::aggregate(
-    count ~ sample_id + .data[[group_col]],
-    data = df,
+    df$count,
+    by = list(
+      sample_id = df$sample_id,
+      site_id = df[[group_col]]
+    ),
     FUN = sum
   )
-  colnames(total_df)[colnames(total_df) == "count"] <- "total_site_count"
+  colnames(total_df)[colnames(total_df) == "x"] <- "total_site_count"
 
   out <- merge(
     df,
     total_df,
     by.x = c("sample_id", group_col),
-    by.y = c("sample_id", group_col),
+    by.y = c("sample_id", "site_id"),
     all.x = TRUE,
     sort = FALSE
   )
@@ -26,7 +29,6 @@
 
   out
 }
-
 
 .compute_as_statistics_leave_one_out <- function(df, pAdjustMethod = "bonferroni") {
   split_idx <- split(seq_len(nrow(df)), df$junction_id)
