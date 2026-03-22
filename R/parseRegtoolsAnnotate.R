@@ -36,8 +36,10 @@ parseRegtoolsAnnotate <- function(x) {
   )
 
   out$junction_id <- paste0(out$chrom, ":", out$start, "-", out$end)
-  out$donor_id <- paste(out$gene_names, out$chrom, out$start, sep = ":")
-  out$acceptor_id <- paste(out$gene_names, out$chrom, out$end, sep = ":")
+
+  # 不依赖 strand，按 gene + chrom + start/end 来分组
+  out$start_id <- paste(out$gene_names, out$chrom, out$start, sep = ":")
+  out$end_id <- paste(out$gene_names, out$chrom, out$end, sep = ":")
 
   out
 }

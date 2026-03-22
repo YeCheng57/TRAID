@@ -6,25 +6,29 @@
 \usage{
 runAS(
   x,
-  mode = c("both", "donor", "acceptor"),
+  mode = c("both", "start", "end"),
   pAdjustMethod = "bonferroni",
   pCutoff = 0.05,
   minTotalReads = 10,
-  minJunctionReads = 5
+  minJunctionReads = 5,
+  returnAll = FALSE
 )
 }
 \arguments{
 \item{x}{A regtools annotate table.}
 
-\item{mode}{One of "both", "donor", "acceptor".}
+\item{mode}{One of "both", "start", "end".}
 
 \item{pAdjustMethod}{Multiple testing correction method.}
 
 \item{pCutoff}{Adjusted p-value cutoff.}
 
-\item{minTotalReads}{Minimum total reads at donor/acceptor site.}
+\item{minTotalReads}{Minimum total reads at start/end site for defining outliers.}
 
-\item{minJunctionReads}{Minimum reads supporting focal junction.}
+\item{minJunctionReads}{Minimum reads supporting focal junction for defining outliers.}
+
+\item{returnAll}{Logical; whether to return all tested junctions. If FALSE,
+only outliers are returned.}
 }
 \value{
 An object of class \code{ASResult}.

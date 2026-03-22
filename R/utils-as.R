@@ -1,7 +1,7 @@
-.compute_junction_psi <- function(df, site = c("donor", "acceptor")) {
+.compute_junction_psi <- function(df, site = c("start", "end")) {
   site <- match.arg(site)
 
-  group_col <- if (site == "donor") "donor_id" else "acceptor_id"
+  group_col <- if (site == "start") "start_id" else "end_id"
 
   total_df <- stats::aggregate(
     df$count,
@@ -30,6 +30,7 @@
   out
 }
 
+
 .compute_as_statistics_leave_one_out <- function(df, pAdjustMethod = "bonferroni") {
   split_idx <- split(seq_len(nrow(df)), df$junction_id)
 
@@ -42,8 +43,11 @@
     d$delta_psi <- NA_real_
     d$zscore <- NA_real_
     d$pvalue <- NA_real_
+    d$n_others_non_missing <- 0L
+    d$reason_na <- NA_character_
 
     if (n < 2) {
+      d$reason_na <- "insufficient_others"
       return(d)
     }
 
@@ -51,7 +55,10 @@
       others <- d$psi[-i]
       others <- others[!is.na(others)]
 
+      d$n_others_non_missing[i] <- length(others)
+
       if (length(others) < 2) {
+        d$reason_na[i] <- "insufficient_others"
         next
       }
 
@@ -62,10 +69,14 @@
       d$psi_sd_others[i] <- sigma
       d$delta_psi[i] <- d$psi[i] - mu
 
-      if (!is.na(sigma) && sigma > 0) {
-        d$zscore[i] <- d$delta_psi[i] / sigma
-        d$pvalue[i] <- 2 * stats::pnorm(-abs(d$zscore[i]))
+      if (is.na(sigma) || sigma == 0) {
+        d$reason_na[i] <- "zero_sd"
+        next
       }
+
+      d$zscore[i] <- d$delta_psi[i] / sigma
+      d$pvalue[i] <- 2 * stats::pnorm(-abs(d$zscore[i]))
+      d$reason_na[i] <- NA_character_
     }
 
     d
