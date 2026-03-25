@@ -91,14 +91,23 @@
 
   df
 }
-.filter_chrX_by_sex <- function(df, sex = NULL, chrX = c("X", "chrX")) {
+.filter_chrX_by_sex <- function(df, sex = NULL,
+                                chrX = c("X", "chrX"),
+                                chrY = c("Y", "chrY"),
+                                verbose = TRUE) {
 
-  # 没传 sex：默认去掉 X
+  # ---- 先去掉 Y（默认行为）----
+  df <- df[!df$contig %in% chrY, , drop = FALSE]
+
+  # ---- 没传 sex → 去掉 X ----
   if (is.null(sex)) {
+    if (isTRUE(verbose)) {
+      warning("No sex information provided: chrX sites will be removed.")
+    }
     return(df[!df$contig %in% chrX, , drop = FALSE])
   }
 
-  # data.frame -> named vector
+  # ---- 转换 sex 输入 ----
   if (is.data.frame(sex)) {
     if (!all(c("sample_id", "sex") %in% colnames(sex))) {
       stop("`sex` data.frame must contain columns: sample_id, sex")
@@ -108,16 +117,53 @@
     sex_vec <- sex
   }
 
-  sex_vec <- tolower(as.character(sex_vec))
+  raw_sex_vec <- sex_vec
 
-  df$is_chrX <- df$contig %in% chrX
+  # ---- 标准化 ----
+  sex_vec <- .normalize_sex(sex_vec)
+  if (isTRUE(verbose)) print(table(sex_vec, useNA = "ifany"))
+
+  # ---- 匹配到 df ----
   df$sex_tmp <- sex_vec[df$sample_id]
+
+  # ---- 检查：未匹配样本 ----
+  n_na_match <- sum(is.na(df$sex_tmp))
+  if (n_na_match > 0 && isTRUE(verbose)) {
+    warning(sprintf(
+      "%d rows have no matching sex information (set to 'unknown').",
+      n_na_match
+    ))
+  }
+
   df$sex_tmp[is.na(df$sex_tmp)] <- "unknown"
 
-  # 只有 female 保留 X
+  # ---- 检查：标准化后分布 ----
+  if (isTRUE(verbose)) {
+    sex_table <- table(df$sex_tmp)
+
+    if (length(sex_table) == 1 && names(sex_table) == "unknown") {
+      warning("All samples are 'unknown' after sex normalization. chrX will be removed.")
+    }
+
+    if ("unknown" %in% names(sex_table)) {
+      warning(sprintf(
+        "%d entries have 'unknown' sex after normalization.",
+        sex_table["unknown"]
+      ))
+    }
+
+    if (!"female" %in% names(sex_table)) {
+      warning("No female samples detected. All chrX sites will be removed.")
+    }
+  }
+
+  # ---- X 过滤 ----
+  df$is_chrX <- df$contig %in% chrX
+
   keep <- !(df$is_chrX & df$sex_tmp != "female")
   df <- df[keep, , drop = FALSE]
 
+  # ---- 清理 ----
   df$is_chrX <- NULL
   df$sex_tmp <- NULL
 
@@ -151,4 +197,23 @@
   df$padj <- stats::p.adjust(df$pvalue, method = pAdjustMethod)
   df
 }
+.normalize_sex <- function(sex_vec) {
 
+  if (is.null(sex_vec)) return(NULL)
+
+  nm <- names(sex_vec)
+
+  sex_chr <- as.character(sex_vec)
+  sex_chr <- trimws(tolower(sex_chr))
+
+  female_set <- c("female", "f", "2", "xx")
+  male_set   <- c("male", "m", "1", "xy")
+
+  out <- rep("unknown", length(sex_chr))
+
+  out[sex_chr %in% female_set] <- "female"
+  out[sex_chr %in% male_set]   <- "male"
+
+  names(out) <- nm
+  out
+}
