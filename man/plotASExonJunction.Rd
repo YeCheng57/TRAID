@@ -14,7 +14,8 @@ plotASExonJunction(
   exon_annotation = NULL,
   gtf = NULL,
   cache = TRUE,
-  topN = 3
+  topN = 2,
+  showReference = TRUE
 )
 }
 \arguments{
@@ -30,26 +31,16 @@ plotASExonJunction(
 
 \item{site}{One of "start" or "end".}
 
-\item{exon_annotation}{A data.frame containing exon-level annotation.
-It must include the following columns:
-\describe{
-\item{chrom}{Character. Chromosome name (e.g. \code{"1"} or \code{"chr1"}).}
-\item{start}{Integer. Exon start coordinate (1-based, inclusive).}
-\item{end}{Integer. Exon end coordinate (1-based, inclusive).}
-\item{strand}{Character. Strand information (\code{"+"}, \code{"-"}, or \code{"*"}).}
-\item{gene_id}{Character. Gene identifier.}
-\item{gene_name}{Character. Gene symbol or gene name.}
-\item{transcript_id}{Character. Transcript identifier.}
-\item{exon_id}{Character. Unique exon identifier.}
-\item{exon_number}{Integer. Exon number within transcript (optional but recommended).}
-}}
+\item{exon_annotation}{A standardized exon annotation data.frame.}
 
 \item{gtf}{Optional local path or URL to a GTF/GTF.GZ file. Used only if
 \code{exon_annotation} is not provided.}
 
 \item{cache}{Logical; whether to cache parsed exon annotation when \code{gtf} is used.}
 
-\item{topN}{Integer; number of competing junctions to display.}
+\item{topN}{Integer; number of competing junctions to display in addition to the focal junction.}
+
+\item{showReference}{Logical; whether to draw a reference transcript track.}
 }
 \value{
 A ggplot object.
