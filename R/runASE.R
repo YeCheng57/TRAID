@@ -8,6 +8,13 @@
 #' @param pCutoff Adjusted p-value cutoff.
 #' @param ratioCutoff Allelic ratio cutoff. Sites with `alt_ratio > ratioCutoff`
 #' or `< 1 - ratioCutoff` are considered significant.
+#' @param sex Optional sex information. Can be either:
+#' \itemize{
+#'   \item a named character vector, e.g. `c(S1 = "female", S2 = "male")`
+#'   \item a data.frame with columns `sample_id` and `sex`
+#' }
+#' If not provided, chrX sites are excluded by default.
+#' @param chrX Character vector specifying chromosome X names, default `c("X", "chrX")`.
 #' @param returnAll Logical; whether to return all tested sites. If FALSE, only outliers are returned.
 #'
 #' @return An object of class `ASEResult`.
@@ -20,6 +27,8 @@ runASE <- function(
     region_keep = c("exonic", "UTR"),
     pCutoff = 0.05,
     ratioCutoff = 0.7,
+    sex = NULL,
+    chrX = c("X", "chrX"),
     returnAll = FALSE
 ) {
   df <- parseASEReadCounter(x)
@@ -41,6 +50,9 @@ runASE <- function(
   # DP & region filter
   df <- df[df$total_count >= minDP, , drop = FALSE]
   df <- df[df$region %in% region_keep, , drop = FALSE]
+
+  # chrX handling
+  df <- .filter_chrX_by_sex(df, sex = sex, chrX = chrX)
 
   # 位点级统计
   df <- .run_binom_ase(df, pAdjustMethod = "fdr")
@@ -90,7 +102,9 @@ runASE <- function(
       minDP = minDP,
       region_keep = region_keep,
       pCutoff = pCutoff,
-      ratioCutoff = ratioCutoff
+      ratioCutoff = ratioCutoff,
+      chrX = chrX,
+      sex_provided = !is.null(sex)
     )
   )
 }

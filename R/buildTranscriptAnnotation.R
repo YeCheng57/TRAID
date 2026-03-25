@@ -1,68 +1,48 @@
-#' Parse GATK ASEReadCounter table
+#' Build transcript annotation from GTF
 #'
-#' @param x A data.frame containing GATK ASEReadCounter results.
-#' @param sampleID Optional sample ID. If `x` does not contain a sample column,
-#' this value will be used.
+#' @param gtf Path to a local GTF/GTF.GZ file.
 #'
-#' @return A standardized ASE table.
+#' @return A list with components `exon` and `utr`.
 #' @export
-parseASEReadCounter <- function(x, sampleID = NULL) {
-  if (!is.data.frame(x)) {
-    stop("`x` must be a data.frame.")
+buildTranscriptAnnotation <- function(gtf) {
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    stop("Please install package 'rtracklayer'.")
   }
 
-  cn <- colnames(x)
-
-  # 常见列名兼容
-  contig_col <- intersect(c("contig", "Contig", "CHROM", "chr"), cn)
-  pos_col <- intersect(c("position", "Position", "POS", "pos"), cn)
-  ref_col <- intersect(c("refAllele", "RefAllele", "REF", "ref"), cn)
-  alt_col <- intersect(c("altAllele", "AltAllele", "ALT", "alt"), cn)
-  ref_count_col <- intersect(c("refCount", "RefCount", "ref_count"), cn)
-  alt_count_col <- intersect(c("altCount", "AltCount", "alt_count"), cn)
-  total_col <- intersect(c("totalCount", "TotalCount", "DP", "dp", "total_count"), cn)
-  sample_col <- intersect(c("sample_id", "sampleID", "Sample", "sample"), cn)
-
-  reqs <- c(contig_col[1], pos_col[1], ref_col[1], alt_col[1], ref_count_col[1], alt_count_col[1])
-  if (any(is.na(reqs)) || any(reqs == "")) {
-    stop("Could not identify required ASEReadCounter columns.")
+  if (!file.exists(gtf)) {
+    stop("GTF file not found: ", gtf)
   }
 
-  out <- data.frame(
-    sample_id = if (length(sample_col) > 0) as.character(x[[sample_col[1]]]) else sampleID,
-    contig = as.character(x[[contig_col[1]]]),
-    position = as.integer(x[[pos_col[1]]]),
-    ref = as.character(x[[ref_col[1]]]),
-    alt = as.character(x[[alt_col[1]]]),
-    ref_count = as.numeric(x[[ref_count_col[1]]]),
-    alt_count = as.numeric(x[[alt_count_col[1]]]),
-    stringsAsFactors = FALSE
+  gr <- rtracklayer::import(gtf)
+  df <- as.data.frame(gr)
+
+  if (!"type" %in% colnames(df)) {
+    stop("Imported GTF does not contain `type` column.")
+  }
+
+  std_df <- function(d) {
+    out <- data.frame(
+      chrom = as.character(d$seqnames),
+      start = as.integer(d$start),
+      end = as.integer(d$end),
+      strand = as.character(d$strand),
+      gene_id = if ("gene_id" %in% colnames(d)) as.character(d$gene_id) else NA_character_,
+      gene_name = if ("gene_name" %in% colnames(d)) as.character(d$gene_name) else NA_character_,
+      transcript_id = if ("transcript_id" %in% colnames(d)) as.character(d$transcript_id) else NA_character_,
+      stringsAsFactors = FALSE
+    )
+    bad_gene_name <- is.na(out$gene_name) | out$gene_name == ""
+    out$gene_name[bad_gene_name] <- out$gene_id[bad_gene_name]
+    out
+  }
+
+  exon_df <- std_df(df[df$type == "exon", , drop = FALSE])
+
+  utr_types <- c("UTR", "five_prime_UTR", "three_prime_UTR", "5UTR", "3UTR")
+  utr_df <- std_df(df[df$type %in% utr_types, , drop = FALSE])
+
+  list(
+    exon = exon_df,
+    utr = utr_df
   )
-
-  if (is.null(out$sample_id)) {
-    stop("No sample column found and `sampleID` was not provided.")
-  }
-
-  if (length(total_col) > 0) {
-    out$total_count <- as.numeric(x[[total_col[1]]])
-  } else {
-    out$total_count <- out$ref_count + out$alt_count
-  }
-
-  # variant id
-  out$variant_id <- paste(out$contig, out$position, out$ref, out$alt, sep = ":")
-
-  # 默认先标成 SNV / non-SNV
-  out$variant_type <- ifelse(
-    nchar(out$ref) == 1 & nchar(out$alt) == 1,
-    "SNV",
-    "non-SNV"
-  )
-
-  # 如果原表已有 gene/region 信息，也带上
-  if ("gene_name" %in% cn) out$gene_name <- as.character(x$gene_name)
-  if ("gene_id" %in% cn) out$gene_id <- as.character(x$gene_id)
-  if ("region" %in% cn) out$region <- as.character(x$region)
-
-  out
 }
