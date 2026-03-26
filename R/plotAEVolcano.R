@@ -1,72 +1,75 @@
 #' Plot AE volcano plot for one sample
 #'
 #' @param x An `AEResult` object.
-#' @param sampleID Character scalar specifying the target sample.
-#' @param topN Integer; number of top genes to label.
-#' @param groupBy Optional character scalar specifying a column name in stored `colData`.
+#' @param sampleID Sample ID.
+#' @param padjCutoff FDR cutoff for highlighting outliers.
+#' @param zCutoff Optional z-score cutoff.
+#' @param labelTopN Number of top genes (by |zscore|) to label.
+#' @param groupBy Optional grouping column (only used in subtitle).
+#' @param sample_info Optional sample metadata overriding stored metadata.
 #'
-#' @return A ggplot object.
+#' @return ggplot object
 #' @export
-plotAEVolcano <- function(x, sampleID, topN = 10, groupBy = NULL) {
+plotAEVolcano <- function(
+    x,
+    sampleID,
+    padjCutoff = 0.05,
+    zCutoff = NULL,
+    labelTopN = 10,
+    groupBy = NULL,
+    sample_info = NULL
+) {
   if (!inherits(x, "AEResult")) {
     stop("`x` must be an AEResult object.")
   }
 
-  df <- getSampleAE(x, sampleID)
+  df <- x$result
+  df <- df[df$sample_id == sampleID, , drop = FALSE]
 
-  if (!"padj" %in% colnames(df) || !"log2fc" %in% colnames(df)) {
-    stop("Result must contain `padj` and `log2fc` columns.")
+  if (nrow(df) == 0) {
+    stop("No AE result found for sample: ", sampleID)
   }
 
-  df$neglog10_padj <- -log10(df$padj)
-  df$neglog10_padj[!is.finite(df$neglog10_padj)] <- NA_real_
-  df <- .attach_group_info(df, x, groupBy = groupBy)
+  # ---- outlier定义 ----
+  df$is_outlier <- !is.na(df$padj) & df$padj < padjCutoff
+  if (!is.null(zCutoff)) {
+    df$is_outlier <- df$is_outlier &
+      !is.na(df$zscore) &
+      abs(df$zscore) >= zCutoff
+  }
 
+  df$neglog10_padj <- -log10(pmax(df$padj, .Machine$double.xmin))
+
+  # ---- label ----
+  df$abs_z <- abs(df$zscore)
+  df <- df[order(df$abs_z, decreasing = TRUE), ]
   df$label <- ""
-  ord <- order(df$padj, na.last = NA)
-  if (length(ord) > 0) {
-    idx <- utils::head(ord, topN)
-    if ("gene_name" %in% colnames(df)) {
-      lab <- df$gene_name[idx]
-      bad <- is.na(lab) | lab == ""
-      lab[bad] <- df$gene_id[idx][bad]
-      df$label[idx] <- lab
-    } else {
-      df$label[idx] <- df$gene_id[idx]
-    }
+
+  if (!is.null(labelTopN) && labelTopN > 0) {
+    top_idx <- seq_len(min(labelTopN, nrow(df)))
+    label_col <- if ("gene_name" %in% colnames(df)) "gene_name" else "gene_id"
+    df$label[top_idx] <- df[[label_col]][top_idx]
   }
 
-  if (!is.null(groupBy) && "group" %in% colnames(df) && any(!is.na(df$group))) {
-    p <- ggplot2::ggplot(
-      df,
-      ggplot2::aes(x = log2fc, y = neglog10_padj)
-    ) +
-      ggplot2::geom_point(
-        ggplot2::aes(color = group, shape = is_outlier),
-        alpha = 0.7
-      )
-  } else {
-    p <- ggplot2::ggplot(
-      df,
-      ggplot2::aes(x = log2fc, y = neglog10_padj)
-    ) +
-      ggplot2::geom_point(
-        ggplot2::aes(color = is_outlier),
-        alpha = 0.7
-      )
+  # ---- sample group（只用于subtitle）----
+  si <- if (!is.null(sample_info)) sample_info else x$metadata$sample_info
+  sample_group <- NULL
+
+  if (!is.null(groupBy) && !is.null(si) && groupBy %in% colnames(si)) {
+    m <- match(sampleID, si$sample_id)
+    sample_group <- si[[groupBy]][m]
   }
 
-  p +
-    ggplot2::geom_text(
-      data = df[df$label != "", , drop = FALSE],
-      ggplot2::aes(label = label),
-      size = 3,
-      vjust = -0.5,
-      check_overlap = TRUE
-    ) +
+  # ---- plot ----
+  ggplot2::ggplot(df, ggplot2::aes(x = log2fc, y = neglog10_padj)) +
+    ggplot2::geom_point(ggplot2::aes(color = is_outlier)) +
+    ggrepel::geom_text_repel(ggplot2::aes(label = label), size = 3, max.overlaps = Inf) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank()) +
     ggplot2::labs(
-      title = paste("AE volcano:", sampleID),
+      title = paste0("AE Volcano: ", sampleID),
+      subtitle = if (!is.null(sample_group)) paste(groupBy, "=", sample_group) else NULL,
       x = "log2 fold change",
-      y = expression(-log[10](adjusted~p))
+      y = "-log10(FDR)"
     )
 }

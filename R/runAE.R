@@ -8,7 +8,7 @@
 #' a raw count matrix/data.frame.
 #' @param geneLength Optional named numeric vector of gene lengths in bp.
 #' Required when `x` is not a featureCounts table and `filterByFPKM = TRUE`.
-#' @param colData Optional sample metadata as a data.frame.
+#' @param sample_info Optional sample metadata as a data.frame.
 #' @param rowData Optional gene annotation as a data.frame.
 #' @param filterByFPKM Logical; whether to filter genes using FPKM.
 #' @param minFPKM Numeric cutoff for FPKM filtering.
@@ -23,7 +23,7 @@
 runAE <- function(
     x,
     geneLength = NULL,
-    colData = NULL,
+    sample_info = NULL,
     rowData = NULL,
     filterByFPKM = TRUE,
     minFPKM = 1,
@@ -49,7 +49,9 @@ runAE <- function(
     counts <- .coerce_counts_matrix(x)
   }
 
-  colData <- .coerce_coldata(colData, colnames(counts))
+  sample_ids <- colnames(counts)
+  validateSamplesAgainstInfo(sample_ids, sample_info, input_name = "AE input")
+
   rowData <- .coerce_rowdata(rowData, rownames(counts))
 
   if (!identical(implementation, "OUTRIDER")) {
@@ -75,16 +77,22 @@ runAE <- function(
     stop("No genes remaining after filtering.")
   }
 
-  if (is.null(colData)) {
+  # ---- OUTRIDER 用的 colData_f 统一从 sample_info 构造 ----
+  if (is.null(sample_info)) {
     colData_f <- data.frame(
       sampleID = colnames(counts_f),
       row.names = colnames(counts_f),
       stringsAsFactors = FALSE
     )
   } else {
-    colData_f <- colData[colnames(counts_f), , drop = FALSE]
+    m <- match(colnames(counts_f), sample_info$sample_id)
+    colData_f <- sample_info[m, , drop = FALSE]
+
+    # rownames 设成 sample_id，便于 OUTRIDER 对齐
+    rownames(colData_f) <- colData_f$sample_id
+
     if (!"sampleID" %in% colnames(colData_f)) {
-      colData_f$sampleID <- rownames(colData_f)
+      colData_f$sampleID <- colData_f$sample_id
     }
   }
 
@@ -172,7 +180,8 @@ runAE <- function(
       n_genes_after_prefilter = nrow(counts_f),
       n_samples = ncol(counts),
       used_fpkm_filter = filterByFPKM,
-      colData = colData_f
+      sample_ids = colnames(counts_f),
+      sample_info = sample_info
     ),
     parameters = list(
       minFPKM = minFPKM,

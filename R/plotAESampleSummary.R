@@ -1,11 +1,16 @@
-#' Plot AE outlier counts per sample
+#' Plot AE outlier burden per sample
 #'
 #' @param x An `AEResult` object.
-#' @param groupBy Optional character scalar specifying a column name in stored `colData`.
+#' @param groupBy Optional grouping column in `sample_info`.
+#' @param sample_info Optional sample metadata overriding `x$metadata$sample_info`.
 #'
 #' @return A ggplot object.
 #' @export
-plotAESampleSummary <- function(x, groupBy = NULL) {
+plotAESampleSummary <- function(
+    x,
+    groupBy = NULL,
+    sample_info = NULL
+) {
   if (!inherits(x, "AEResult")) {
     stop("`x` must be an AEResult object.")
   }
@@ -13,53 +18,35 @@ plotAESampleSummary <- function(x, groupBy = NULL) {
   df <- x$result
 
   if (!all(c("sample_id", "is_outlier") %in% colnames(df))) {
-    stop("Result must contain `sample_id` and `is_outlier` columns.")
+    stop("AE result must contain `sample_id` and `is_outlier`.")
   }
 
-  summ <- stats::aggregate(
+  df_sum <- stats::aggregate(
     is_outlier ~ sample_id,
     data = df,
     FUN = function(z) sum(z, na.rm = TRUE)
   )
-  colnames(summ)[2] <- "n_outlier"
+  colnames(df_sum)[2] <- "n_outlier"
 
-  summ <- .attach_group_info(summ, x, groupBy = groupBy)
+  df_sum <- .attach_group_info(df_sum, x, groupBy = groupBy, sample_info = sample_info)
 
-  if (!is.null(groupBy) && "group" %in% colnames(summ) && any(!is.na(summ$group))) {
-    ggplot2::ggplot(
-      summ,
-      ggplot2::aes(
-        x = stats::reorder(sample_id, -n_outlier),
-        y = n_outlier,
-        fill = group
-      )
-    ) +
-      ggplot2::geom_col() +
-      ggplot2::labs(
-        title = "AE outlier counts per sample",
-        x = "Sample",
-        y = "Number of outlier genes",
-        fill = groupBy
-      ) +
-      ggplot2::theme(
-        axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5)
-      )
-  } else {
-    ggplot2::ggplot(
-      summ,
-      ggplot2::aes(
-        x = stats::reorder(sample_id, -n_outlier),
-        y = n_outlier
-      )
-    ) +
-      ggplot2::geom_col() +
-      ggplot2::labs(
-        title = "AE outlier counts per sample",
-        x = "Sample",
-        y = "Number of outlier genes"
-      ) +
-      ggplot2::theme(
-        axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5)
-      )
+  if (!"group" %in% colnames(df_sum)) {
+    df_sum$group <- "All"
   }
+
+  df_sum <- df_sum[order(df_sum$group, df_sum$n_outlier), , drop = FALSE]
+  df_sum$sample_id <- factor(df_sum$sample_id, levels = df_sum$sample_id)
+
+  ggplot2::ggplot(df_sum, ggplot2::aes(x = sample_id, y = n_outlier, fill = group)) +
+    ggplot2::geom_col() +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
+      panel.grid = ggplot2::element_blank()
+    ) +
+    ggplot2::labs(
+      title = "AE outlier burden by sample",
+      x = "Sample",
+      y = "Number of outlier genes"
+    )
 }

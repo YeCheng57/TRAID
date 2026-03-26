@@ -2,18 +2,20 @@
 % Please edit documentation in R/plotAESampleSummary.R
 \name{plotAESampleSummary}
 \alias{plotAESampleSummary}
-\title{Plot AE outlier counts per sample}
+\title{Plot AE outlier burden per sample}
 \usage{
-plotAESampleSummary(x, groupBy = NULL)
+plotAESampleSummary(x, groupBy = NULL, sample_info = NULL)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{groupBy}{Optional grouping column in \code{sample_info}.}
+
+\item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plot AE outlier counts per sample
+Plot AE outlier burden per sample
 }

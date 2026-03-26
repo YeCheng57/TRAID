@@ -2,30 +2,36 @@
 % Please edit documentation in R/plotAEGeneObservedExpected.R
 \name{plotAEGeneObservedExpected}
 \alias{plotAEGeneObservedExpected}
-\title{Plot observed vs expected expression for one gene across samples}
+\title{Plot observed vs expected expression for one gene}
 \usage{
 plotAEGeneObservedExpected(
   x,
   geneID,
-  sampleID = NULL,
-  logScale = TRUE,
-  groupBy = NULL
+  use = c("gene_id", "gene_name"),
+  value = c("norm_count", "raw_count"),
+  logScale = FALSE,
+  groupBy = NULL,
+  sample_info = NULL
 )
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{geneID}{Character scalar specifying the target gene.}
+\item{geneID}{Gene identifier or symbol.}
 
-\item{sampleID}{Optional character scalar specifying one sample to highlight.}
+\item{use}{\code{"gene_id"} or \code{"gene_name"}.}
 
-\item{logScale}{Logical; whether to use log10 scale.}
+\item{value}{\code{"norm_count"} or \code{"raw_count"}}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{logScale}{Whether to log-scale y axis.}
+
+\item{groupBy}{Grouping column.}
+
+\item{sample_info}{Optional override metadata.}
 }
 \value{
-A ggplot object.
+ggplot object
 }
 \description{
-Plot observed vs expected expression for one gene across samples
+Plot observed vs expected expression for one gene
 }

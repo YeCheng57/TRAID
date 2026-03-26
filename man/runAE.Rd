@@ -7,7 +7,7 @@
 runAE(
   x,
   geneLength = NULL,
-  colData = NULL,
+  sample_info = NULL,
   rowData = NULL,
   filterByFPKM = TRUE,
   minFPKM = 1,
@@ -26,7 +26,7 @@ a raw count matrix/data.frame.}
 \item{geneLength}{Optional named numeric vector of gene lengths in bp.
 Required when \code{x} is not a featureCounts table and \code{filterByFPKM = TRUE}.}
 
-\item{colData}{Optional sample metadata as a data.frame.}
+\item{sample_info}{Optional sample metadata as a data.frame.}
 
 \item{rowData}{Optional gene annotation as a data.frame.}
 

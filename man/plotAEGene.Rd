@@ -2,33 +2,37 @@
 % Please edit documentation in R/plotAEGene.R
 \name{plotAEGene}
 \alias{plotAEGene}
-\title{Plot expression pattern of one gene across samples}
+\title{Plot AE values for one gene across samples}
 \usage{
 plotAEGene(
   x,
   geneID,
-  sampleID = NULL,
+  use = c("gene_id", "gene_name"),
   value = c("raw_count", "norm_count", "expected_count", "zscore", "log2fc"),
-  logScale = TRUE,
-  groupBy = NULL
+  logScale = FALSE,
+  groupBy = NULL,
+  sample_info = NULL
 )
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{geneID}{Character scalar specifying the target gene.}
+\item{geneID}{Gene identifier or gene symbol.}
 
-\item{sampleID}{Optional character scalar specifying one sample to highlight.}
+\item{use}{One of \code{"gene_id"} or \code{"gene_name"}.}
 
-\item{value}{Which value to plot. One of "raw_count", "norm_count", "expected_count", "zscore", "log2fc".}
+\item{value}{Which value to plot. One of
+\code{"raw_count"}, \code{"norm_count"}, \code{"expected_count"}, \code{"zscore"}, \code{"log2fc"}.}
 
-\item{logScale}{Logical; whether to use log10 scale for count-based values.}
+\item{logScale}{Logical; whether to use log10 scale for count-like values.}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{groupBy}{Optional grouping column in \code{sample_info}.}
+
+\item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plot expression pattern of one gene across samples
+Plot AE values for one gene across samples
 }

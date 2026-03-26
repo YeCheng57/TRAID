@@ -4,19 +4,33 @@
 \alias{plotAEVolcano}
 \title{Plot AE volcano plot for one sample}
 \usage{
-plotAEVolcano(x, sampleID, topN = 10, groupBy = NULL)
+plotAEVolcano(
+  x,
+  sampleID,
+  padjCutoff = 0.05,
+  zCutoff = NULL,
+  labelTopN = 10,
+  groupBy = NULL,
+  sample_info = NULL
+)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{sampleID}{Character scalar specifying the target sample.}
+\item{sampleID}{Sample ID.}
 
-\item{topN}{Integer; number of top genes to label.}
+\item{padjCutoff}{FDR cutoff for highlighting outliers.}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{zCutoff}{Optional z-score cutoff.}
+
+\item{labelTopN}{Number of top genes (by |zscore|) to label.}
+
+\item{groupBy}{Optional grouping column (only used in subtitle).}
+
+\item{sample_info}{Optional sample metadata overriding stored metadata.}
 }
 \value{
-A ggplot object.
+ggplot object
 }
 \description{
 Plot AE volcano plot for one sample

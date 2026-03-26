@@ -2,22 +2,24 @@
 % Please edit documentation in R/plotAEZScore.R
 \name{plotAEZScore}
 \alias{plotAEZScore}
-\title{Plot AE z-score ranking for one sample}
+\title{Plot top AE z-scores for one sample}
 \usage{
-plotAEZScore(x, sampleID, topN = 10, groupBy = NULL)
+plotAEZScore(x, sampleID, topN = 30, groupBy = NULL, sample_info = NULL)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{sampleID}{Character scalar specifying the target sample.}
+\item{sampleID}{Sample ID.}
 
-\item{topN}{Integer; number of top genes to label.}
+\item{topN}{Number of top genes ranked by absolute z-score to display.}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{groupBy}{Optional grouping column in \code{sample_info}; only used for subtitle.}
+
+\item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plot AE z-score ranking for one sample
+Plot top AE z-scores for one sample
 }
