@@ -32,23 +32,14 @@ print.summary.AEResult <- function(x, ...) {
   invisible(x)
 }
 
-#' Plot AEResult object
-#'
-#' @param x An `AEResult` object.
-#' @param type Type of plot: "volcano", "zscore", "sample_summary", "gene", "gene_oe".
-#' @param sampleID Required for sample-level plots; optional for gene-level plots.
-#' @param geneID Required for gene-level plots.
-#' @param groupBy Optional character scalar specifying a column name in stored `colData`.
-#' @param ... Additional arguments passed to underlying plotting functions.
-#'
-#' @return A ggplot object.
 #' @export
 plot.AEResult <- function(
     x,
-    type = c("volcano", "zscore", "sample_summary", "gene", "gene_oe"),
-    sampleID = NULL,
+    type = c("gene", "gene_oe", "sample_summary", "volcano", "zscore"),
     geneID = NULL,
+    sampleID = NULL,
     groupBy = NULL,
+    sample_info = NULL,
     ...
 ) {
   if (!inherits(x, "AEResult")) {
@@ -57,29 +48,29 @@ plot.AEResult <- function(
 
   type <- match.arg(type)
 
-  if (type == "volcano") {
-    if (is.null(sampleID)) stop("`sampleID` is required for volcano plot.")
-    return(plotAEVolcano(x, sampleID = sampleID, groupBy = groupBy, ...))
-  }
-
-  if (type == "zscore") {
-    if (is.null(sampleID)) stop("`sampleID` is required for z-score plot.")
-    return(plotAEZScore(x, sampleID = sampleID, groupBy = groupBy, ...))
-  }
-
-  if (type == "sample_summary") {
-    return(plotAESampleSummary(x, groupBy = groupBy, ...))
-  }
-
   if (type == "gene") {
-    if (is.null(geneID)) stop("`geneID` is required for gene plot.")
-    return(plotAEGene(x, geneID = geneID, sampleID = sampleID, groupBy = groupBy, ...))
+    if (is.null(geneID)) stop("`geneID` is required for `type = 'gene'`.")
+    return(plotAEGene(x, geneID = geneID, groupBy = groupBy, sample_info = sample_info, ...))
   }
 
   if (type == "gene_oe") {
-    if (is.null(geneID)) stop("`geneID` is required for gene_oe plot.")
-    return(plotAEGeneObservedExpected(x, geneID = geneID, sampleID = sampleID, groupBy = groupBy, ...))
+    if (is.null(geneID)) stop("`geneID` is required for `type = 'gene_oe'`.")
+    return(plotAEGeneObservedExpected(x, geneID = geneID, groupBy = groupBy, sample_info = sample_info, ...))
   }
 
-  stop("Unknown plot type.")
+  if (type == "sample_summary") {
+    return(plotAESampleSummary(x, groupBy = groupBy, sample_info = sample_info, ...))
+  }
+
+  if (type == "volcano") {
+    if (is.null(sampleID)) stop("`sampleID` is required for `type = 'volcano'`.")
+    return(plotAEVolcano(x, sampleID = sampleID, ...))
+  }
+
+  if (type == "zscore") {
+    if (is.null(sampleID)) stop("`sampleID` is required for `type = 'zscore'`.")
+    return(plotAEZScore(x, sampleID = sampleID, ...))
+  }
+
+  stop("Unsupported `type`: ", type)
 }

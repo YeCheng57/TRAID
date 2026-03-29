@@ -2,36 +2,42 @@
 % Please edit documentation in R/plotAEGeneObservedExpected.R
 \name{plotAEGeneObservedExpected}
 \alias{plotAEGeneObservedExpected}
-\title{Plot observed vs expected expression for one gene}
+\title{Plot observed and expected expression for one gene}
 \usage{
 plotAEGeneObservedExpected(
   x,
   geneID,
   use = c("gene_id", "gene_name"),
-  value = c("norm_count", "raw_count"),
   logScale = FALSE,
   groupBy = NULL,
-  sample_info = NULL
+  sample_info = NULL,
+  orderBy = c("observed", "expected", "difference"),
+  decreasing = TRUE,
+  showSampleLabels = FALSE
 )
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
 
-\item{geneID}{Gene identifier or symbol.}
+\item{geneID}{Gene identifier or gene symbol.}
 
-\item{use}{\code{"gene_id"} or \code{"gene_name"}.}
+\item{use}{One of \code{"gene_id"} or \code{"gene_name"}.}
 
-\item{value}{\code{"norm_count"} or \code{"raw_count"}}
+\item{logScale}{Logical; whether to log10-scale the y axis.}
 
-\item{logScale}{Whether to log-scale y axis.}
+\item{groupBy}{Optional grouping column in \code{sample_info}.}
 
-\item{groupBy}{Grouping column.}
+\item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
 
-\item{sample_info}{Optional override metadata.}
+\item{orderBy}{One of \code{"observed"}, \code{"expected"}, or \code{"difference"}.}
+
+\item{decreasing}{Logical; whether to sort in decreasing order.}
+
+\item{showSampleLabels}{Logical; whether to show sample labels on x axis.}
 }
 \value{
-ggplot object
+A ggplot object.
 }
 \description{
-Plot observed vs expected expression for one gene
+Plot observed and expected expression for one gene
 }

@@ -127,7 +127,7 @@ runAE <- function(
   res$log2fc <- res$l2fc
   res$raw_count <- res$rawcounts
   res$norm_count <- res$normcounts
-  res$expected_count <- res$normcounts
+  res$expected_count <- res$meanCorrected
 
   # 加回 gene annotation
   if (!is.null(rowData_f) && nrow(res) > 0) {

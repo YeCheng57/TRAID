@@ -11,7 +11,8 @@ plotAEGene(
   value = c("raw_count", "norm_count", "expected_count", "zscore", "log2fc"),
   logScale = FALSE,
   groupBy = NULL,
-  sample_info = NULL
+  sample_info = NULL,
+  decreasing = TRUE
 )
 }
 \arguments{
@@ -21,14 +22,15 @@ plotAEGene(
 
 \item{use}{One of \code{"gene_id"} or \code{"gene_name"}.}
 
-\item{value}{Which value to plot. One of
-\code{"raw_count"}, \code{"norm_count"}, \code{"expected_count"}, \code{"zscore"}, \code{"log2fc"}.}
+\item{value}{One of \code{"raw_count"}, \code{"norm_count"}, \code{"expected_count"}, \code{"zscore"}, \code{"log2fc"}.}
 
-\item{logScale}{Logical; whether to use log10 scale for count-like values.}
+\item{logScale}{Logical; whether to log10-scale the y axis for count-like values.}
 
 \item{groupBy}{Optional grouping column in \code{sample_info}.}
 
 \item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
+
+\item{decreasing}{Logical; whether to sort samples in decreasing order of \code{value}.}
 }
 \value{
 A ggplot object.

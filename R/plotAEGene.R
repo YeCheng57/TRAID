@@ -3,11 +3,11 @@
 #' @param x An `AEResult` object.
 #' @param geneID Gene identifier or gene symbol.
 #' @param use One of `"gene_id"` or `"gene_name"`.
-#' @param value Which value to plot. One of
-#'   `"raw_count"`, `"norm_count"`, `"expected_count"`, `"zscore"`, `"log2fc"`.
-#' @param logScale Logical; whether to use log10 scale for count-like values.
+#' @param value One of `"raw_count"`, `"norm_count"`, `"expected_count"`, `"zscore"`, `"log2fc"`.
+#' @param logScale Logical; whether to log10-scale the y axis for count-like values.
 #' @param groupBy Optional grouping column in `sample_info`.
 #' @param sample_info Optional sample metadata overriding `x$metadata$sample_info`.
+#' @param decreasing Logical; whether to sort samples in decreasing order of `value`.
 #'
 #' @return A ggplot object.
 #' @export
@@ -18,7 +18,8 @@ plotAEGene <- function(
     value = c("raw_count", "norm_count", "expected_count", "zscore", "log2fc"),
     logScale = FALSE,
     groupBy = NULL,
-    sample_info = NULL
+    sample_info = NULL,
+    decreasing = TRUE
 ) {
   if (!inherits(x, "AEResult")) {
     stop("`x` must be an AEResult object.")
@@ -44,18 +45,23 @@ plotAEGene <- function(
 
   df <- .attach_group_info(df, x, groupBy = groupBy, sample_info = sample_info)
 
-  if (!"group" %in% colnames(df)) {
-    df$group <- "All"
+  if ("group" %in% colnames(df)) {
+    df <- df[order(df$group, df[[value]], decreasing = decreasing), , drop = FALSE]
+  } else {
+    df <- df[order(df[[value]], decreasing = decreasing), , drop = FALSE]
   }
 
-  df <- df[order(df$group, df[[value]]), , drop = FALSE]
   df$sample_id <- factor(df$sample_id, levels = df$sample_id)
 
-  p <- ggplot2::ggplot(
-    df,
-    ggplot2::aes(x = sample_id, y = .data[[value]], fill = group)
-  ) +
-    ggplot2::geom_col() +
+  if ("group" %in% colnames(df)) {
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = sample_id, y = .data[[value]], fill = group)) +
+      ggplot2::geom_col()
+  } else {
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = sample_id, y = .data[[value]])) +
+      ggplot2::geom_col()
+  }
+
+  p <- p +
     ggplot2::theme_bw() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),

@@ -4,7 +4,7 @@
 \alias{plotAEZScore}
 \title{Plot top AE z-scores for one sample}
 \usage{
-plotAEZScore(x, sampleID, topN = 30, groupBy = NULL, sample_info = NULL)
+plotAEZScore(x, sampleID, topN = 30)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
@@ -12,10 +12,6 @@ plotAEZScore(x, sampleID, topN = 30, groupBy = NULL, sample_info = NULL)
 \item{sampleID}{Sample ID.}
 
 \item{topN}{Number of top genes ranked by absolute z-score to display.}
-
-\item{groupBy}{Optional grouping column in \code{sample_info}; only used for subtitle.}
-
-\item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
 }
 \value{
 A ggplot object.

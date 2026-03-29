@@ -4,7 +4,7 @@
 \alias{plotAESampleSummary}
 \title{Plot AE outlier burden per sample}
 \usage{
-plotAESampleSummary(x, groupBy = NULL, sample_info = NULL)
+plotAESampleSummary(x, groupBy = NULL, sample_info = NULL, decreasing = TRUE)
 }
 \arguments{
 \item{x}{An \code{AEResult} object.}
@@ -12,6 +12,8 @@ plotAESampleSummary(x, groupBy = NULL, sample_info = NULL)
 \item{groupBy}{Optional grouping column in \code{sample_info}.}
 
 \item{sample_info}{Optional sample metadata overriding \code{x$metadata$sample_info}.}
+
+\item{decreasing}{Logical; whether to sort in decreasing order of outlier burden.}
 }
 \value{
 A ggplot object.

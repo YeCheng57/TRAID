@@ -3,13 +3,15 @@
 #' @param x An `AEResult` object.
 #' @param groupBy Optional grouping column in `sample_info`.
 #' @param sample_info Optional sample metadata overriding `x$metadata$sample_info`.
+#' @param decreasing Logical; whether to sort in decreasing order of outlier burden.
 #'
 #' @return A ggplot object.
 #' @export
 plotAESampleSummary <- function(
     x,
     groupBy = NULL,
-    sample_info = NULL
+    sample_info = NULL,
+    decreasing = TRUE
 ) {
   if (!inherits(x, "AEResult")) {
     stop("`x` must be an AEResult object.")
@@ -30,15 +32,23 @@ plotAESampleSummary <- function(
 
   df_sum <- .attach_group_info(df_sum, x, groupBy = groupBy, sample_info = sample_info)
 
-  if (!"group" %in% colnames(df_sum)) {
-    df_sum$group <- "All"
+  if ("group" %in% colnames(df_sum)) {
+    df_sum <- df_sum[order(df_sum$group, df_sum$n_outlier, decreasing = decreasing), , drop = FALSE]
+  } else {
+    df_sum <- df_sum[order(df_sum$n_outlier, decreasing = decreasing), , drop = FALSE]
   }
 
-  df_sum <- df_sum[order(df_sum$group, df_sum$n_outlier), , drop = FALSE]
   df_sum$sample_id <- factor(df_sum$sample_id, levels = df_sum$sample_id)
 
-  ggplot2::ggplot(df_sum, ggplot2::aes(x = sample_id, y = n_outlier, fill = group)) +
-    ggplot2::geom_col() +
+  if ("group" %in% colnames(df_sum)) {
+    p <- ggplot2::ggplot(df_sum, ggplot2::aes(x = sample_id, y = n_outlier, fill = group)) +
+      ggplot2::geom_col()
+  } else {
+    p <- ggplot2::ggplot(df_sum, ggplot2::aes(x = sample_id, y = n_outlier)) +
+      ggplot2::geom_col()
+  }
+
+  p +
     ggplot2::theme_bw() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),

@@ -1,10 +1,8 @@
 .attach_group_info <- function(df, x, groupBy = NULL, sample_info = NULL) {
-
   if (is.null(groupBy)) {
     return(df)
   }
 
-  # 优先使用用户传入的 sample_info（override）
   si <- NULL
   if (!is.null(sample_info)) {
     si <- sample_info
