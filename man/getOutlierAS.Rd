@@ -4,7 +4,7 @@
 \alias{getOutlierAS}
 \title{Extract AS outliers}
 \usage{
-getOutlierAS(x, site = c("start", "end", "both"), sampleID = NULL)
+getOutlierAS(x, site = c("both", "start", "end"), sampleID = NULL)
 }
 \arguments{
 \item{x}{An \code{ASResult} object.}

@@ -2,20 +2,37 @@
 % Please edit documentation in R/plotASSampleSummary.R
 \name{plotASSampleSummary}
 \alias{plotASSampleSummary}
-\title{Plot AS outlier counts per sample}
+\title{Plot AS outlier burden per sample}
 \usage{
-plotASSampleSummary(x, site = c("start", "end"), groupBy = NULL)
+plotASSampleSummary(
+  x,
+  site = c("start", "end", "both"),
+  groupBy = NULL,
+  sample_info = NULL,
+  mode = c("count", "fraction"),
+  decreasing = TRUE
+)
 }
 \arguments{
 \item{x}{An \code{ASResult} object.}
 
-\item{site}{One of "start" or "end".}
+\item{site}{One of \code{"start"}, \code{"end"}, or \code{"both"}.
+\code{"start"} uses \code{x$result_start}; \code{"end"} uses \code{x$result_end};
+\code{"both"} combines both tables.}
 
-\item{groupBy}{Optional character scalar specifying a column name in stored \code{colData}.}
+\item{groupBy}{Optional character; column name in \code{sample_info} used for grouping.}
+
+\item{sample_info}{Optional data.frame; user-supplied sample metadata.
+Must contain a column \code{sample_id}. If provided, it overrides
+\code{x$metadata$sample_info}.}
+
+\item{mode}{One of \code{"count"} or \code{"fraction"}.}
+
+\item{decreasing}{Logical; whether to sort samples in decreasing order.}
 }
 \value{
 A ggplot object.
 }
 \description{
-Plot AS outlier counts per sample
+Visualize the number or fraction of aberrant splicing events per sample.
 }

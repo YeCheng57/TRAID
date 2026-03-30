@@ -10,8 +10,8 @@
 getGeneAS <- function(
     x,
     geneID,
-    site = c("start", "end", "both"),
-    use = c("gene_names", "gene_ids")
+    site = c("both","start", "end"),
+    use = "gene_names"
 ) {
   if (!inherits(x, "ASResult")) {
     stop("`x` must be an ASResult object.")
@@ -27,19 +27,18 @@ getGeneAS <- function(
     if (!use %in% colnames(df)) {
       stop("Column `", use, "` not found in AS result.")
     }
-    df[df[[use]] == geneID, , drop = FALSE]
+    df[df[[use]] == geneID&df$is_outlier, , drop = FALSE]
   }
 
   if (site == "start") {
     return(extract_one(x$result_start, geneID, use))
   }
-
   if (site == "end") {
     return(extract_one(x$result_end, geneID, use))
   }
 
-  list(
-    start = extract_one(x$result_start, geneID, use),
-    end = extract_one(x$result_end, geneID, use)
-  )
+  rbind(
+      start = extract_one(x$result_start, geneID, use),
+      end = extract_one(x$result_end, geneID, use)
+    )
 }

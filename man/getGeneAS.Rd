@@ -4,12 +4,7 @@
 \alias{getGeneAS}
 \title{Extract AS results for one gene}
 \usage{
-getGeneAS(
-  x,
-  geneID,
-  site = c("start", "end", "both"),
-  use = c("gene_names", "gene_ids")
-)
+getGeneAS(x, geneID, site = c("both", "start", "end"), use = "gene_names")
 }
 \arguments{
 \item{x}{An \code{ASResult} object.}

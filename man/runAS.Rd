@@ -11,6 +11,8 @@ runAS(
   pCutoff = 0.05,
   minTotalReads = 10,
   minJunctionReads = 5,
+  deltaPSI_cutoff = 0.1,
+  sample_info = NULL,
   returnAll = FALSE
 )
 }
@@ -26,6 +28,13 @@ runAS(
 \item{minTotalReads}{Minimum total reads at start/end site for defining outliers.}
 
 \item{minJunctionReads}{Minimum reads supporting focal junction for defining outliers.}
+
+\item{deltaPSI_cutoff}{Numeric; threshold for defining aberrant splicing events.
+Default is 0.1 (10\%). Events with absolute delta PSI ≥ this cutoff are considered aberrant.}
+
+\item{sample_info}{Optional sample metadata as a data.frame.
+Must contain a column \code{sample_id}, and can include additional annotations
+such as \code{sex}, \code{Gene_diagnostic}, or user-defined grouping variables.}
 
 \item{returnAll}{Logical; whether to return all tested junctions. If FALSE,
 only outliers are returned.}

@@ -6,7 +6,7 @@
 #'
 #' @return A data.frame if one site is requested, or a list if `site = "both"`.
 #' @export
-getOutlierAS <- function(x, site = c("start", "end", "both"), sampleID = NULL) {
+getOutlierAS <- function(x, site = c("both","start", "end"), sampleID = NULL) {
   if (!inherits(x, "ASResult")) {
     stop("`x` must be an ASResult object.")
   }
@@ -37,7 +37,7 @@ getOutlierAS <- function(x, site = c("start", "end", "both"), sampleID = NULL) {
     return(extract_one(x$result_end, sampleID))
   }
 
-  list(
+  rbind(
     start = extract_one(x$result_start, sampleID),
     end = extract_one(x$result_end, sampleID)
   )

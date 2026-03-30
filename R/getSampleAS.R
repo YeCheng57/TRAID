@@ -20,7 +20,7 @@ getSampleAS <- function(x, sampleID, site = c("start", "end", "both")) {
     if (!sampleID %in% res$sample_id) {
       return(res[0, , drop = FALSE])
     }
-    res[res$sample_id == sampleID, , drop = FALSE]
+    res[res$sample_id == sampleID&res$is_outlier, , drop = FALSE]
   }
 
   if (site == "start") {

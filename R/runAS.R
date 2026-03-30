@@ -8,6 +8,11 @@
 #' @param pCutoff Adjusted p-value cutoff.
 #' @param minTotalReads Minimum total reads at start/end site for defining outliers.
 #' @param minJunctionReads Minimum reads supporting focal junction for defining outliers.
+#' @param deltaPSI_cutoff Numeric; threshold for defining aberrant splicing events.
+#' Default is 0.1 (10%). Events with absolute delta PSI ≥ this cutoff are considered aberrant.
+#' @param sample_info Optional sample metadata as a data.frame.
+#' Must contain a column `sample_id`, and can include additional annotations
+#' such as `sex`, `Gene_diagnostic`, or user-defined grouping variables.
 #' @param returnAll Logical; whether to return all tested junctions. If FALSE,
 #' only outliers are returned.
 #'
@@ -20,11 +25,15 @@ runAS <- function(
     pCutoff = 0.05,
     minTotalReads = 10,
     minJunctionReads = 5,
+    deltaPSI_cutoff = 0.1,
+    sample_info = NULL,
     returnAll = FALSE
 ) {
   mode <- match.arg(mode)
 
   df <- parseRegtoolsAnnotate(x)
+  sample_ids<-df$sample_id
+  validateSamplesAgainstInfo(sample_ids, sample_info, input_name = "AE input")
 
   run_one_mode <- function(df, site) {
     # 先对所有 junction 计算 psi 和统计量
@@ -35,7 +44,8 @@ runAS <- function(
     out$is_outlier <- !is.na(out$padj) &
       out$padj < pCutoff &
       out$total_site_count >= minTotalReads &
-      out$junction_count >= minJunctionReads
+      out$junction_count >= minJunctionReads &
+      out$delta_psi >= deltaPSI_cutoff
 
     # 如果统计上 NA，再补 reason_na
     low_total <- out$total_site_count < minTotalReads
@@ -97,6 +107,7 @@ runAS <- function(
     result_end = result_end,
     metadata = list(
       mode = mode,
+      sample_info = sample_info,
       n_rows_input = nrow(df),
       n_samples = length(unique(df$sample_id)),
       returnAll = returnAll
