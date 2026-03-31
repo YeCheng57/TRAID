@@ -2,7 +2,7 @@
 % Please edit documentation in R/findASDifference.R
 \name{findASDifference}
 \alias{findASDifference}
-\title{Find differential splicing events between two groups}
+\title{Differential splicing analysis at event level}
 \usage{
 findASDifference(
   x,
@@ -12,29 +12,66 @@ findASDifference(
   group2,
   site = c("start", "end", "both"),
   value = c("psi", "delta_psi"),
+  test = c("wilcox", "t"),
   min_samples = 3
 )
 }
 \arguments{
-\item{x}{An \code{ASResult} object.}
+\item{x}{An \code{ASResult} object returned by \code{runAS()}.}
 
-\item{sample_info}{Data.frame containing \code{sample_id} and grouping column.}
+\item{sample_info}{A data.frame containing sample metadata.
+Must include a column \code{sample_id} and the grouping variable specified by \code{group_col}.}
 
-\item{group_col}{Column name in sample_info defining groups.}
+\item{group_col}{Character. Column name in \code{sample_info} defining the grouping variable.}
 
-\item{group1}{First group.}
+\item{group1}{Character. Name of the first group.}
 
-\item{group2}{Second group.}
+\item{group2}{Character. Name of the second group.}
 
-\item{site}{One of "start", "end", "both".}
+\item{site}{Character. One of \code{"start"}, \code{"end"}, or \code{"both"}.
+Determines which AS events are used:
+\describe{
+\item{"start"}{Donor (5') events (\code{result_start})}
+\item{"end"}{Acceptor (3') events (\code{result_end})}
+\item{"both"}{Combined events from both}
+}}
 
-\item{value}{"psi" or "delta_psi".}
+\item{value}{Character. One of \code{"psi"} or \code{"delta_psi"}.
+The metric used for comparison between groups.}
 
-\item{min_samples}{Minimum samples per group.}
+\item{test}{Character. One of \code{"wilcox"} or \code{"t"}.
+Statistical test used to compare groups.
+Default is \code{"wilcox"} (recommended for PSI data).}
+
+\item{min_samples}{Integer. Minimum number of non-missing samples required
+in each group for a given event. Default is 3.}
 }
 \value{
-Data.frame of differential splicing events.
+A data.frame containing differential splicing results at event level:
+\describe{
+\item{event_id}{Splicing event identifier (chrom:start-end)}
+\item{chrom, start, end}{Genomic coordinates}
+\item{gene_name, gene_id}{Gene annotation (if available)}
+\item{event_source}{"start" or "end" (if \code{site = "both"})}
+\item{mean_group1, mean_group2}{Mean PSI (or delta PSI) per group}
+\item{delta}{Difference between groups (group1 - group2)}
+\item{pvalue}{Raw p-value}
+\item{padj}{FDR-adjusted p-value}
+\item{direction}{Group with higher mean value}
+\item{n1, n2}{Number of samples per group}
+}
+
+Results are sorted by absolute delta in descending order.
 }
 \description{
-Find differential splicing events between two groups
+Perform differential splicing analysis between two groups of samples
+using event-level PSI (or delta PSI) values from an \code{ASResult} object.
+Statistical testing is performed per event using either Wilcoxon rank-sum test
+(recommended) or Student's t-test.
+}
+\details{
+PSI values are bounded between 0 and 1 and often non-normally distributed.
+Therefore, Wilcoxon rank-sum test is used by default.
+
+This function operates at the event level and does not perform gene-level aggregation.
 }
